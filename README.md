@@ -66,6 +66,17 @@ from the structure of a plot (layers, axes, labels). BrailleR describes plots to
 maidr makes charts explorable by keyboard and sound. MatplotAlt does data-based alt text for
 matplotlib in Python. ggaltdata adds data-based findings and the data table for ggplot2.
 
+## Getting help and contributing
+
+To report a problem, ask a question or propose a change, see
+[CONTRIBUTING](https://github.com/fniniv/ggaltdata/blob/main/.github/CONTRIBUTING.md). Issues go to <https://github.com/fniniv/ggaltdata/issues>.
+
+## Code of Conduct
+
+Please note that the ggaltdata project is released with a
+[Contributor Code of Conduct](https://contributor-covenant.org/version/2/1/CODE_OF_CONDUCT.html).
+By contributing to this project, you agree to abide by its terms.
+
 ## License
 
 MIT © Federico Ninivaggi
