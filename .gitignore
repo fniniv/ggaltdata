@@ -1,0 +1,6 @@
+.Rproj.user
+.Rhistory
+*.Rcheck/
+*.tar.gz
+dev/out/
+tests/testthat/_problems/

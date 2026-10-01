@@ -1,0 +1,128 @@
+---
+title: "Getting started with ggaltdata"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started with ggaltdata}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 6, fig.height = 3.5)
+library(ggaltdata)
+library(ggplot2)
+```
+
+Accessibility rules for documents (WCAG 2.1, success criterion 1.1.1) ask for a text alternative for
+every chart that carries information. A useful alternative text says what the chart shows, not how it
+is drawn. ggaltdata writes it from the data of the chart itself: every number in the text is a number
+that is drawn.
+
+## A first chart
+
+```{r bars, fig.alt = alt_text(p)}
+scores <- data.frame(
+  item = rep(c("Apples", "Pears", "Plums", "Figs"), 2),
+  area = rep(c("North", "South"), each = 4),
+  score = c(2.80, 3.05, 3.35, 2.95, 3.35, 3.30, 3.50, 3.25)
+)
+p <- ggplot(scores, aes(item, score, fill = area)) +
+  geom_col(position = "dodge") +
+  labs(title = "Ratings in two markets", x = "products", y = "average score")
+p
+```
+
+The short alternative text, one or two sentences within 250 characters:
+
+```{r}
+alt_text(p)
+```
+
+In Italian:
+
+```{r}
+alt_text(p, lang = "it")
+```
+
+The long description and the data table, written for a screen reader in the console:
+
+```{r}
+alt_describe(p)
+```
+
+## What the text says, chart by chart
+
+| Chart | Findings |
+|---|---|
+| bars and dots, one series | highest and lowest, ranking |
+| bars or dots in two groups | which group is higher, on how many categories, widest gap |
+| stacked bars | highest and lowest total, largest part |
+| differences around zero (lollipop) | how many values are above or below zero, largest values |
+| estimates with intervals | highest and lowest estimate with their intervals, whether the intervals overlap, how many exclude a reference line |
+| lines over time | start and end values, direction, peak, which series ends higher |
+| maps (`geom_sf`) | areas with the highest and lowest values, median |
+
+Other chart types get a description of their structure and a warning of class
+`ggaltdata_unsupported`; nothing stops a report from rendering.
+
+## Where the text goes
+
+**R Markdown:** set the chunk option `fig.alt = alt_text(p)`, as in the first chunk of this vignette.
+
+**Quarto:** in the chunk, `#| fig-alt: !expr alt_text(p)`.
+
+**The plot object:** `add_alt()` stores the text with `labs(alt = )`, so that
+`ggplot2::get_alt_text()` and Shiny find it. A text written by hand is kept unless `overwrite = TRUE`.
+
+```{r}
+p2 <- add_alt(p)
+ggplot2::get_alt_text(p2)
+```
+
+**Shiny:** `renderPlot()` has an `alt` argument (Shiny 1.6.0 and later).
+
+```{r, eval = FALSE}
+output$plot <- renderPlot(p, alt = alt_text(p))
+```
+
+**Saved images:** `save_alt()` writes the text and the data next to the image.
+
+```{r, eval = FALSE}
+ggsave("figure1.png", p)
+save_alt(p, "figure1.png")   # figure1.alt.txt and figure1.data.csv
+```
+
+**Word, with officer:** the data table after the chart.
+
+```{r, eval = FALSE}
+doc <- officer::read_docx()
+doc <- as_docx_table(p, doc, caption = "Data of Figure 1")
+print(doc, target = "report.docx")
+```
+
+**Markdown table** of the data, for an appendix:
+
+```{r, results = "asis"}
+cat(as_markdown(p, caption = "Data of the chart"))
+```
+
+## Intervals and a reference line
+
+```{r intervals, fig.alt = alt_text(q)}
+towns <- data.frame(
+  town = c("Alder", "Birch", "Cedar", "Maple"),
+  est = c(4.05, 3.90, 3.31, 3.82), lo = c(3.93, 3.77, 3.15, 3.70), hi = c(4.17, 4.03, 3.47, 3.94)
+)
+q <- ggplot(towns, aes(est, town)) +
+  geom_pointrange(aes(xmin = lo, xmax = hi)) +
+  geom_vline(xintercept = 3.85, linetype = 2) +
+  labs(x = "satisfaction index")
+q
+alt_text(q, max_chars = 400)
+```
+
+## What the package does not do
+
+It does not judge which finding matters most to your argument: it states the facts that the data
+support, and the author decides what to keep. It does not use a language model, so it cannot invent
+a number, and it does not describe charts it does not recognise.

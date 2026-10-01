@@ -1,0 +1,33 @@
+Package: ggaltdata
+Title: Data-Driven Alternative Text and Data Tables for 'ggplot2' Charts
+Version: 0.1.0
+Authors@R:
+    person("Federico", "Ninivaggi", email = "fninivdevelopment@gmail.com",
+           role = c("aut", "cre"))
+Description: Generates alternative text that states what a 'ggplot2' chart
+    shows (highest and lowest values, rankings, trends, gaps between groups,
+    overlap of intervals), a long description and the data table, computed
+    from the data of the chart itself. Output for 'R Markdown', 'Quarto',
+    'Word', saved images and 'Shiny', in English and Italian.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Language: en-US
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 8.0.0
+Depends:
+    R (>= 4.1)
+Imports:
+    ggplot2 (>= 3.5.0),
+    rlang,
+    stats,
+    utils
+Suggests:
+    knitr,
+    officer,
+    rmarkdown,
+    sf,
+    shiny,
+    testthat (>= 3.0.0),
+    withr
+Config/testthat/edition: 3
+VignetteBuilder: knitr
