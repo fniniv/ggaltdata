@@ -16,7 +16,9 @@ GEOM_KIND <- c(
   GeomHline = "ref", GeomVline = "ref",
   GeomSegment = "segment",
   GeomSf = "sf",
-  GeomText = "annotation", GeomLabel = "annotation", GeomBlank = "annotation"
+  GeomText = "annotation", GeomLabel = "annotation", GeomBlank = "annotation",
+  # a confidence band drawn around a line: the line carries the findings
+  GeomRibbon = "annotation"
 )
 
 geom_kind <- function(layer) {
@@ -26,7 +28,24 @@ geom_kind <- function(layer) {
 }
 
 is_discrete_scale <- function(s) !is.null(s) && inherits(s, "ScaleDiscrete")
-is_date_scale <- function(s) !is.null(s) && (inherits(s, "ScaleContinuousDate") || inherits(s, "ScaleContinuousDatetime"))
+time_kind <- function(s) {
+  if (is.null(s)) "none" else if (inherits(s, "ScaleContinuousDatetime")) "datetime"
+  else if (inherits(s, "ScaleContinuousDate")) "date" else "none"
+}
+
+# the coarsest unit that names every x of a series without losing information
+time_unit <- function(x, time, tz) {
+  if (time == "date") {
+    if (all(format(as.Date(x, origin = "1970-01-01"), "%d") == "01")) "month" else "day"
+  } else if (time == "datetime") {
+    t <- as.POSIXct(x, origin = "1970-01-01", tz = tz)
+    if (all(format(t, "%H:%M:%S") == "00:00:00")) "day" else "minute"
+  } else "none"
+}
+
+as_time <- function(x, time, tz) {
+  if (time == "datetime") as.POSIXct(x, origin = "1970-01-01", tz = tz) else as.Date(x, origin = "1970-01-01")
+}
 
 # map the colours of a discrete fill/colour scale back to their labels
 colour_to_label <- function(plot_scales, aes, values) {
@@ -120,7 +139,9 @@ gad_read <- function(p, area_var = NULL) {
       lo <- paste0(val_ax, "min")
       hi <- paste0(val_ax, "max")
       if (k == "bar") {
-        out$value <- d[[hi]] - d[[lo]]
+        # a bar below zero (ymax <= 0) keeps its sign: its height alone would turn -0.46 into 0.46
+        h <- d[[hi]] - d[[lo]]
+        out$value <- ifelse(d[[hi]] <= 0 & d[[lo]] < 0, -h, h)
         out$stack_base <- d[[lo]]
         out$stack_top <- d[[hi]]
       } else {
@@ -137,7 +158,9 @@ gad_read <- function(p, area_var = NULL) {
       }
       sx <- lay$panel_scales_x[[1]]
       out$x <- d$x
-      out$x_is_date <- is_date_scale(sx)
+      # dates are stored as days and date-times as seconds since 1970: keep which one, and the time zone
+      out$x_time <- time_kind(sx)
+      out$x_tz <- if (out$x_time[1] == "datetime") (sx$timezone %||% "UTC") else NA_character_
       out$value <- d$y
       if (k == "interval") {
         out$lower <- d$ymin

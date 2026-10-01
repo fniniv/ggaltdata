@@ -16,12 +16,12 @@ alt_describe(p, lang = "en", n_extremes = 3, area_var = NULL)
 \item{area_var}{For maps (\code{geom_sf}), the column with the names of the areas.}
 }
 \value{
-Invisibly, an object of class \code{ggaltdata} with elements \code{short_sentences}, \code{long},
-\code{table} and \code{facts}.
+An object of class \code{ggaltdata} with elements \code{short_sentences}, \code{long}, \code{table} and
+\code{facts}; its print method writes the long description and the data table.
 }
 \description{
-Prints a plain-text description of the chart (title, structure, every finding, ranking) and its
-data table, in a form that a screen reader reads line by line. Returns the result invisibly.
+Builds a plain-text description of the chart (title, structure, every finding, ranking) and its
+data table. Printed in the console, it reads line by line in a screen reader.
 }
 \examples{
 library(ggplot2)

@@ -159,3 +159,74 @@ test_that("a label shortened with an ellipsis keeps it", {
   a <- alt_text(ggplot(d, aes(item, v)) + geom_col())
   expect_match(a, "by ha... the lowest", fixed = TRUE)
 })
+
+# Found by the pre-release check of 2026-10-01 ------------------------------------------------------
+
+test_that("bars below zero keep their sign (regression)", {
+  d <- data.frame(item = c("Apples", "Pears", "Plums", "Figs"), v = c(0.41, -0.46, -0.02, 0.27))
+  a <- alt_text(ggplot(d, aes(item, v)) + geom_col())
+  expect_match(a, "Apples has the highest v (0.41)", fixed = TRUE)
+  expect_match(a, "Pears the lowest (-0.46)", fixed = TRUE)
+  expect_equal(alt_data(ggplot(d, aes(v, item)) + geom_col())$v[match(d$item, d$item)], d$v)
+})
+
+test_that("stacked bars with negative parts keep the signs", {
+  d <- data.frame(item = rep(c("a", "b"), each = 2), part = rep(c("in", "out"), 2), v = c(3, -1, 2, -2))
+  tb <- alt_data(ggplot(d, aes(item, v, fill = part)) + geom_col())
+  expect_equal(sort(tb$v), sort(d$v))
+})
+
+test_that("daily dates: both ends written the same way (regression)", {
+  days <- data.frame(day = seq(as.Date("2026-03-01"), by = "day", length.out = 10), v = c(10:15, 15, 16, 17, 18))
+  a <- alt_text(ggplot(days, aes(day, v)) + geom_line())
+  expect_match(a, "from 10 in 2026-03-01 to 18 in 2026-03-10", fixed = TRUE)
+})
+
+test_that("monthly dates still use month names", {
+  m <- data.frame(month = seq(as.Date("2026-01-01"), by = "month", length.out = 3), v = c(1, 2, 3))
+  expect_match(alt_text(ggplot(m, aes(month, v)) + geom_line()), "from 1 in January 2026 to 3 in March 2026")
+})
+
+test_that("date-time axis is read as date and time (regression)", {
+  h <- data.frame(t = as.POSIXct("2026-03-01 08:00", tz = "UTC") + 3600 * 0:5, v = c(5, 6, 7, 6, 8, 9))
+  p <- ggplot(h, aes(t, v)) + geom_line()
+  expect_match(alt_text(p), "from 5 in 2026-03-01 08:00 to 9 in 2026-03-01 13:00", fixed = TRUE)
+  tb <- alt_data(p)
+  expect_s3_class(tb[[1]], "POSIXct")
+  expect_equal(as.numeric(tb[[1]]), as.numeric(h$t))
+})
+
+test_that("a confidence band around a line gives no warning", {
+  days <- data.frame(day = 1:5, v = c(1, 2, 3, 4, 5))
+  p <- ggplot(days, aes(day, v)) + geom_ribbon(aes(ymin = v - 1, ymax = v + 1), alpha = 0.2) + geom_line()
+  expect_no_warning(a <- alt_text(p))
+  expect_match(a, "rises from 1")
+})
+
+test_that("an unsupported extra layer is named in the warning, findings are kept", {
+  d <- data.frame(t = 1:10, v = c(1, 3, 2, 4, 5, 4, 6, 7, 6, 8))
+  p <- ggplot(d, aes(t, v)) + geom_line() + geom_smooth(method = "lm", formula = y ~ x)
+  expect_warning(a <- alt_text(p), "left out of the text (GeomSmooth)", fixed = TRUE, class = "ggaltdata_unsupported")
+  expect_match(a, "rises from 1")
+})
+
+test_that("value labels (geom_text) and coord_flip do not change the findings", {
+  base <- alt_text(ggplot(bars, aes(item, score)) + geom_col())
+  expect_no_warning(lab <- alt_text(ggplot(bars, aes(item, score)) + geom_col() + geom_text(aes(label = score))))
+  expect_identical(lab, base)
+  expect_identical(alt_text(ggplot(bars, aes(item, score)) + geom_col() + coord_flip()), base)
+})
+
+test_that("three groups: highest and lowest group mean", {
+  three <- data.frame(item = rep(c("a", "b", "c", "d"), 3), market = rep(c("North", "South", "East"), each = 4),
+                      score = c(2.8, 3.0, 3.3, 2.9, 3.4, 3.3, 3.5, 3.2, 3.1, 3.6, 3.0, 3.3))
+  a <- alt_text(ggplot(three, aes(item, score, fill = market)) + geom_col(position = "dodge"))
+  expect_match(a, "South is highest (3.35) and North lowest (3.00)", fixed = TRUE)
+})
+
+test_that("vertical intervals and error bars alone give the interval findings", {
+  v <- alt_text(ggplot(towns, aes(town, est)) + geom_pointrange(aes(ymin = lo, ymax = hi)))
+  expect_match(v, "Alder has the highest estimate (4.05; 3.93 to 4.17)", fixed = TRUE)
+  e <- alt_text(ggplot(towns, aes(town, ymin = lo, ymax = hi)) + geom_errorbar())
+  expect_match(e, "Cedar the lowest (3.31; 3.15 to 3.47)", fixed = TRUE)
+})

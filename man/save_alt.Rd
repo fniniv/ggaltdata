@@ -21,6 +21,14 @@ save_alt(p, file, lang = "en", max_chars = 250, area_var = NULL)
 Invisibly, the paths of the two files written.
 }
 \description{
-Writes \verb{<file>.alt.txt} (short and long text) and \verb{<file>.data.csv} beside the image saved with
-\code{ggplot2::ggsave()}.
+Writes two files beside the image saved with \code{ggplot2::ggsave()}: for \code{file = "figure1.png"},
+\code{figure1.alt.txt} (short and long text) and \code{figure1.data.csv} (the data table).
+}
+\examples{
+library(ggplot2)
+df <- data.frame(item = c("Apples", "Pears"), score = c(3.6, 2.7))
+p <- ggplot(df, aes(item, score)) + geom_col()
+f <- file.path(tempdir(), "figure1.png")
+ggsave(f, p, width = 4, height = 3)
+save_alt(p, f)
 }

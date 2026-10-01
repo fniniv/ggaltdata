@@ -10,9 +10,12 @@ check_lang <- function(lang) {
 
 warn_unsupported <- function(r) {
   bad <- unique(r$geoms[r$kinds %in% c("unsupported", "scatter")])
-  if (length(bad) || is.null(primary_layer(r))) {
-    rlang::warn(paste0("No automatic findings for this chart type (", paste(r$geoms, collapse = ", "),
+  if (is.null(primary_layer(r))) {
+    rlang::warn(paste0("No automatic findings for this chart type (", paste(unique(r$geoms), collapse = ", "),
                        "): only its structure is described."), class = "ggaltdata_unsupported")
+  } else if (length(bad)) {
+    rlang::warn(paste0("Layers without automatic findings are left out of the text (",
+                       paste(bad, collapse = ", "), ")."), class = "ggaltdata_unsupported")
   }
 }
 
@@ -109,7 +112,7 @@ gad_table <- function(r) {
   } else if (!is.null(d$category)) {
     out[[r$cat_label %||% "Category"]] <- d$category
   } else if (!is.null(d$x)) {
-    out[[r$x_label %||% "x"]] <- if (isTRUE(d$x_is_date[1])) as.Date(d$x, origin = "1970-01-01") else d$x
+    out[[r$x_label %||% "x"]] <- if (identical(d$x_time[1], "none")) d$x else as_time(d$x, d$x_time[1], d$x_tz[1])
   }
   if (any(!is.na(d$group))) out[[r$group_label %||% "Group"]] <- d$group
   vname <- if (k == "sf") (r$labels$fill %||% "Value") else (r$value_label %||% "Value")
@@ -124,21 +127,19 @@ gad_table <- function(r) {
 
 #' Long description and data table, for reading in the R console
 #'
-#' Prints a plain-text description of the chart (title, structure, every finding, ranking) and its
-#' data table, in a form that a screen reader reads line by line. Returns the result invisibly.
+#' Builds a plain-text description of the chart (title, structure, every finding, ranking) and its
+#' data table. Printed in the console, it reads line by line in a screen reader.
 #'
 #' @inheritParams alt_text
-#' @return Invisibly, an object of class `ggaltdata` with elements `short_sentences`, `long`,
-#'   `table` and `facts`.
+#' @return An object of class `ggaltdata` with elements `short_sentences`, `long`, `table` and
+#'   `facts`; its print method writes the long description and the data table.
 #' @examples
 #' library(ggplot2)
 #' df <- data.frame(item = c("Apples", "Pears", "Plums"), score = c(3.6, 2.7, 3.2))
 #' alt_describe(ggplot(df, aes(item, score)) + geom_col())
 #' @export
 alt_describe <- function(p, lang = "en", n_extremes = 3, area_var = NULL) {
-  x <- gad_describe(p, check_lang(lang), n_extremes, area_var)
-  print(x)
-  invisible(x)
+  gad_describe(p, check_lang(lang), n_extremes, area_var)
 }
 
 #' @export
@@ -222,6 +223,14 @@ as_markdown <- function(x, caption = NULL, digits = NULL, lang = "en") {
 #' @param caption Optional caption written before the table.
 #' @param lang Language of the generated texts, if `x` is a plot.
 #' @return The `rdocx` object with the table added.
+#' @examples
+#' if (requireNamespace("officer", quietly = TRUE)) {
+#'   library(ggplot2)
+#'   df <- data.frame(item = c("Apples", "Pears"), score = c(3.6, 2.7))
+#'   p <- ggplot(df, aes(item, score)) + geom_col()
+#'   doc <- as_docx_table(p, officer::read_docx(), caption = "Data of Figure 1")
+#'   print(doc, target = file.path(tempdir(), "report.docx"))
+#' }
 #' @export
 as_docx_table <- function(x, doc, caption = NULL, lang = "en") {
   if (!requireNamespace("officer", quietly = TRUE)) {
@@ -235,12 +244,19 @@ as_docx_table <- function(x, doc, caption = NULL, lang = "en") {
 
 #' Save the alternative text and the data table next to an image
 #'
-#' Writes `<file>.alt.txt` (short and long text) and `<file>.data.csv` beside the image saved with
-#' `ggplot2::ggsave()`.
+#' Writes two files beside the image saved with `ggplot2::ggsave()`: for `file = "figure1.png"`,
+#' `figure1.alt.txt` (short and long text) and `figure1.data.csv` (the data table).
 #'
 #' @inheritParams alt_text
 #' @param file Path of the image (for example `"figure1.png"`).
 #' @return Invisibly, the paths of the two files written.
+#' @examples
+#' library(ggplot2)
+#' df <- data.frame(item = c("Apples", "Pears"), score = c(3.6, 2.7))
+#' p <- ggplot(df, aes(item, score)) + geom_col()
+#' f <- file.path(tempdir(), "figure1.png")
+#' ggsave(f, p, width = 4, height = 3)
+#' save_alt(p, f)
 #' @export
 save_alt <- function(p, file, lang = "en", max_chars = 250, area_var = NULL) {
   x <- gad_describe(p, check_lang(lang), area_var = area_var)

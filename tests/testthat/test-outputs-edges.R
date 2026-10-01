@@ -72,8 +72,9 @@ test_that("not a ggplot, or no layers: informative errors", {
   expect_error(alt_text(p, lang = "fr"), class = "ggaltdata_error")
 })
 
-test_that("describe prints and returns invisibly", {
-  out <- capture.output(x <- alt_describe(p))
+test_that("alt_describe is silent when assigned and prints the description", {
+  expect_silent(x <- alt_describe(p))
   expect_s3_class(x, "ggaltdata")
+  out <- capture.output(print(x))
   expect_true(any(grepl("Apples", out)))
 })

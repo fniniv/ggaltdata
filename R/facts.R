@@ -122,7 +122,8 @@ facts_series <- function(d, panel, tol_share = 0.05) {
     pk <- which.max(z$value)
     out[[length(out) + 1]] <- list(type = "trend", panel = panel, priority = 1, series = s,
       x0 = z$x[1], x1 = z$x[nrow(z)], v0 = z$value[1], v1 = z$value[nrow(z)], change = ch,
-      direction = dir, peak_x = z$x[pk], peak_v = z$value[pk], is_date = isTRUE(z$x_is_date[1]),
+      direction = dir, peak_x = z$x[pk], peak_v = z$value[pk], time = z$x_time[1], tz = z$x_tz[1],
+      x_unit = time_unit(z$x, z$x_time[1], z$x_tz[1]),
       peak_inside = pk > 1 && pk < nrow(z))
     ends[[s]] <- z$value[nrow(z)]
   }

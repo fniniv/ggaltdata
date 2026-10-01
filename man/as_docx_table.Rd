@@ -21,3 +21,12 @@ The \code{rdocx} object with the table added.
 \description{
 Requires the officer package.
 }
+\examples{
+if (requireNamespace("officer", quietly = TRUE)) {
+  library(ggplot2)
+  df <- data.frame(item = c("Apples", "Pears"), score = c(3.6, 2.7))
+  p <- ggplot(df, aes(item, score)) + geom_col()
+  doc <- as_docx_table(p, officer::read_docx(), caption = "Data of Figure 1")
+  print(doc, target = file.path(tempdir(), "report.docx"))
+}
+}

@@ -125,4 +125,4 @@ alt_text(q, max_chars = 400)
 
 It does not judge which finding matters most to your argument: it states the facts that the data
 support, and the author decides what to keep. It does not use a language model, so it cannot invent
-a number, and it does not describe charts it does not recognise.
+a number, and it does not describe charts it does not recognize.

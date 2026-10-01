@@ -120,14 +120,15 @@ fmt_num <- function(x, lang, digits, percent = FALSE, sign = FALSE) {
   if (percent) paste0(s, "%") else s
 }
 
-fmt_x <- function(x, is_date, lang) {
-  if (!isTRUE(is_date)) return(fmt_num(x, lang, choose_digits(x)))
-  d <- as.Date(x, origin = "1970-01-01")
-  if (as.integer(format(d, "%d")) == 1) {
-    paste(MONTHS[[lang]][as.integer(format(d, "%m"))], format(d, "%Y"))
-  } else {
-    format(d, "%Y-%m-%d")
-  }
+# x of a series fact: the unit is chosen on the whole series, so both ends read the same way
+fmt_x <- function(x, f, lang) {
+  unit <- f$x_unit %||% "none"
+  if (unit == "none") return(fmt_num(x, lang, choose_digits(x)))
+  t <- as_time(x, f$time, f$tz)
+  switch(unit,
+    month = paste(MONTHS[[lang]][as.integer(format(t, "%m"))], format(t, "%Y")),
+    day = format(t, "%Y-%m-%d"),
+    format(t, "%Y-%m-%d %H:%M"))
 }
 
 join_list <- function(x, lang) {
@@ -166,7 +167,7 @@ fact_sentence <- function(f, r, lang, digits) {
     interval_ref = fill_tpl(tpl(lang, "interval_ref"), k = f$k, n = f$n, ref = n(f$ref), above = f$above, below = f$below),
     trend = {
       s <- fill_tpl(tpl(lang, paste0("trend_", f$direction)), series = series(f$series),
-        v0 = n(f$v0), v1 = n(f$v1), x0 = fmt_x(f$x0, f$is_date, lang), x1 = fmt_x(f$x1, f$is_date, lang))
+        v0 = n(f$v0), v1 = n(f$v1), x0 = fmt_x(f$x0, f, lang), x1 = fmt_x(f$x1, f, lang))
       substr(s, 1, 1) <- toupper(substr(s, 1, 1))
       s
     },
@@ -183,7 +184,7 @@ fact_long_extra <- function(f, r, lang, digits) {
   out <- character()
   if (f$type == "trend" && isTRUE(f$peak_inside)) {
     s <- fill_tpl(tpl(lang, "peak"), series = if (identical(f$series, "")) "" else paste0(f$series, ": "),
-      peak_v = n(f$peak_v), peak_x = fmt_x(f$peak_x, f$is_date, lang))
+      peak_v = n(f$peak_v), peak_x = fmt_x(f$peak_x, f, lang))
     substr(s, 1, 1) <- toupper(substr(s, 1, 1))
     out <- c(out, s)
   }

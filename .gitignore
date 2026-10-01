@@ -4,3 +4,6 @@
 *.tar.gz
 dev/out/
 tests/testthat/_problems/
+vignettes/*.html
+vignettes/*.R
+inst/doc
