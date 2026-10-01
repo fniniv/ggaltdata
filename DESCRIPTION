@@ -10,6 +10,8 @@ Description: Generates alternative text that states what a 'ggplot2' chart
     from the data of the chart itself. Output for 'R Markdown', 'Quarto',
     'Word', saved images and 'Shiny', in English and Italian.
 License: MIT + file LICENSE
+URL: https://github.com/fniniv/ggaltdata
+BugReports: https://github.com/fniniv/ggaltdata/issues
 Encoding: UTF-8
 Language: en-US
 Roxygen: list(markdown = TRUE)

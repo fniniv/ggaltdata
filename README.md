@@ -1,5 +1,9 @@
 # ggaltdata
 
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/fniniv/ggaltdata/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/fniniv/ggaltdata/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
+
 Alternative text that says what a ggplot2 chart shows, written from the data of the chart.
 
 Accessibility rules (WCAG 2.1 success criterion 1.1.1, the ADA Title II rule in the United States,
