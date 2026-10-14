@@ -1,6 +1,7 @@
 # ggaltdata
 
 <!-- badges: start -->
+[![CRAN status](https://www.r-pkg.org/badges/version/ggaltdata)](https://CRAN.R-project.org/package=ggaltdata)
 [![R-CMD-check](https://github.com/fniniv/ggaltdata/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/fniniv/ggaltdata/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
@@ -20,7 +21,10 @@ estimated. English and Italian.
 ## Installation
 
 ```r
-# development version
+# release version from CRAN
+install.packages("ggaltdata")
+
+# development version from GitHub
 # install.packages("remotes")
 remotes::install_github("fniniv/ggaltdata")
 ```
